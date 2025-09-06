@@ -153,6 +153,10 @@ talent-matcher/
 - Automatic email notifications sent
 - Real-time dashboard updates
 
+<img width="3840" height="1506" alt="Untitled diagram _ Mermaid Chart-2025-09-06-173231" src="https://github.com/user-attachments/assets/1361e739-8178-4502-be13-4668c5258de8" />
+
+
+
 ## API Endpoints
 
 ### Job Description Management
