@@ -84,11 +84,11 @@ async def upload_resume(
     db.commit()
     db.refresh(candidate)
     
-    # Match against all active JDs
-    jds = db.query(JD).filter(JD.is_active == True).all()
+    # Match against the specific JD only
+    jd = db.query(JD).filter(JD.id == jd_id, JD.is_active == True).first()
     matches_created = 0
     
-    for jd in jds:
+    if jd:
         # Prepare data for matching
         jd_data = {
             "description": jd.description or "",
@@ -118,7 +118,7 @@ async def upload_resume(
         )
         
         db.add(match)
-        matches_created += 1
+        matches_created = 1
     
     db.commit()
     

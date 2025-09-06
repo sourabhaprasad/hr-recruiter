@@ -7,6 +7,53 @@ from services.mailer import send_shortlist_email
 from typing import Optional, List
 import random
 from collections import Counter
+import math
+
+def calculate_actual_diversity_score(diversity_metrics: dict) -> float:
+    """Calculate diversity score based on actual distribution data"""
+    if not diversity_metrics:
+        return 75.0
+    
+    # Calculate gender diversity (Shannon entropy)
+    gender_dist = diversity_metrics.get("gender_distribution", {})
+    gender_entropy = 0
+    if gender_dist:
+        for percentage in gender_dist.values():
+            if percentage > 0:
+                p = percentage / 100.0  # Convert percentage to probability
+                gender_entropy += -p * math.log2(p)
+    
+    # Calculate experience diversity
+    exp_dist = diversity_metrics.get("experience_distribution", {})
+    exp_entropy = 0
+    if exp_dist:
+        for percentage in exp_dist.values():
+            if percentage > 0:
+                p = percentage / 100.0
+                exp_entropy += -p * math.log2(p)
+    
+    # Calculate education diversity
+    edu_dist = diversity_metrics.get("education_distribution", {})
+    edu_entropy = 0
+    if edu_dist:
+        for percentage in edu_dist.values():
+            if percentage > 0:
+                p = percentage / 100.0
+                edu_entropy += -p * math.log2(p)
+    
+    # Normalize entropies to 0-100 scale
+    max_gender_entropy = math.log2(len(gender_dist)) if gender_dist else 1
+    max_exp_entropy = math.log2(len(exp_dist)) if exp_dist else 1
+    max_edu_entropy = math.log2(len(edu_dist)) if edu_dist else 1
+    
+    gender_score = (gender_entropy / max_gender_entropy * 100) if max_gender_entropy > 0 else 0
+    exp_score = (exp_entropy / max_exp_entropy * 100) if max_exp_entropy > 0 else 0
+    edu_score = (edu_entropy / max_edu_entropy * 100) if max_edu_entropy > 0 else 0
+    
+    # Weighted average (gender 40%, experience 35%, education 25%)
+    diversity_score = (gender_score * 0.4 + exp_score * 0.35 + edu_score * 0.25)
+    
+    return round(diversity_score, 1)
 
 def detect_bias_in_candidates(candidates: List[dict]) -> List[dict]:
     """Detect potential bias in candidate data"""
@@ -71,7 +118,7 @@ def calculate_diversity_metrics(candidates: List[dict]) -> dict:
         gender = candidate.get("gender", "unknown")
         gender_counts[gender] = gender_counts.get(gender, 0) + 1
     
-    gender_distribution = {gender: count/total_candidates for gender, count in gender_counts.items()}
+    gender_distribution = {gender: round((count/total_candidates) * 100, 1) for gender, count in gender_counts.items()}
     
     # Experience distribution
     experience_ranges = {"0-2": 0, "2-5": 0, "5-10": 0, "10+": 0, "unknown": 0}
@@ -88,7 +135,7 @@ def calculate_diversity_metrics(candidates: List[dict]) -> dict:
         else:
             experience_ranges["10+"] += 1
     
-    experience_distribution = {range_name: count/total_candidates for range_name, count in experience_ranges.items()}
+    experience_distribution = {range_name: round((count/total_candidates) * 100, 1) for range_name, count in experience_ranges.items()}
     
     # Education distribution
     education_counts = {}
@@ -96,7 +143,7 @@ def calculate_diversity_metrics(candidates: List[dict]) -> dict:
         education = candidate.get("education", "unknown")
         education_counts[education] = education_counts.get(education, 0) + 1
     
-    education_distribution = {edu: count/total_candidates for edu, count in education_counts.items()}
+    education_distribution = {edu: round((count/total_candidates) * 100, 1) for edu, count in education_counts.items()}
     
     return {
         "gender_distribution": gender_distribution,
@@ -244,8 +291,8 @@ def get_dashboard_insights(jd_id: Optional[int] = None, db: Session = Depends(ge
             "Finance": random.randint(12, 28)
         }
         
-        # Calculate diversity score (simple average)
-        diversity_score = round(random.uniform(0.6, 0.9), 2)
+        # Calculate diversity score based on actual data
+        diversity_score = calculate_actual_diversity_score(diversity_metrics)
         
         # Generate sentiment data (mock)
         sentiment_data = {
