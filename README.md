@@ -294,4 +294,9 @@ npm start
    - Recruitment insights and recommendations
    - Bias analysis explanations
    - Suggested questions based on dashboard state
+  
+## Screenshot / Preview
+<img width="2940" height="7846" alt="screencapture-localhost-3000-dashboard-2025-09-06-23_07_54" src="https://github.com/user-attachments/assets/a09d3e40-0c07-4098-a4c4-5cde7fb5920d" />
+
+
 
